@@ -48,8 +48,9 @@ public class Main {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
             String timestamp = dateFormat.format(new Date());
             String requestURI = exchange.getRequestURI().toString();
-            masterResponse = masterResponse + "Received HTTP request at " + timestamp + "  URI: " + requestURI + "\n";
-            System.out.println("Received HTTP request at " + timestamp + "  URI: " + requestURI);
+            String clientIP = String.format("%-32s", exchange.getRemoteAddress().getAddress().getHostAddress());
+            masterResponse = masterResponse + "Received HTTP request at " + timestamp + "  IP: " + clientIP + "  URI: " + requestURI + "\n";
+            System.out.println("Received HTTP request at " + timestamp + "  IP: " + clientIP + "  URI: " + requestURI + "\n");
         }
     }
     static class MyHandlerSecond implements HttpHandler {
