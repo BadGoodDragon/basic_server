@@ -18,6 +18,7 @@ public class Main {
         // Create an HTTP server and set the request handler
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new MyHandler());
+        server.createContext("/info/", new MyHandlerSecond());
 
         // Start the server
         server.setExecutor(null); // Use the default executor
@@ -26,7 +27,8 @@ public class Main {
         System.out.println("Server is running at http://localhost:" + port);
     }
 
-    // HTTP request handler
+    public static String masterResponse = "";
+
     static class MyHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -46,8 +48,17 @@ public class Main {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             String timestamp = dateFormat.format(new Date());
             String requestURI = exchange.getRequestURI().toString();
-
+            masterResponse = masterResponse + "Received HTTP request at " + timestamp + "  URI: " + requestURI + "\n";
             System.out.println("Received HTTP request at " + timestamp + "  URI: " + requestURI);
+        }
+    }
+    static class MyHandlerSecond implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            exchange.sendResponseHeaders(200, masterResponse.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(masterResponse.getBytes());
+            os.close();
         }
     }
 }
