@@ -18,7 +18,7 @@ public class Main {
         // Create an HTTP server and set the request handler
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new MyHandler());
-        server.createContext("/info/", new MyHandlerSecond());
+        server.createContext("/info", new MyHandlerSecond());
 
         // Start the server
         server.setExecutor(null); // Use the default executor
@@ -45,7 +45,7 @@ public class Main {
 
         // Helper method to log request details
         private void logRequestDetails(HttpExchange exchange) throws IOException {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
             String timestamp = dateFormat.format(new Date());
             String requestURI = exchange.getRequestURI().toString();
             masterResponse = masterResponse + "Received HTTP request at " + timestamp + "  URI: " + requestURI + "\n";
