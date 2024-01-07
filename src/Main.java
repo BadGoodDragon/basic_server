@@ -7,6 +7,9 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.*;
+import java.lang.RuntimeException;
+
 
 
 public class Main {
@@ -19,7 +22,8 @@ public class Main {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new MyHandler());
         server.createContext("/info", new MyHandlerSecond());
-
+        server.createContext("/new", new MyHandlerReply());
+        server.createContext("/stop", new MyHandlerStop());
         // Start the server
         server.setExecutor(null); // Use the default executor
         server.start();
@@ -28,6 +32,7 @@ public class Main {
     }
 
     public static String masterResponse = "";
+    public static String reply = "Hello world!";
 
     static class MyHandler implements HttpHandler {
         @Override
@@ -36,10 +41,9 @@ public class Main {
             logRequestDetails(exchange);
 
             // Send a response to the client
-            String response = "Hello, World!";
-            exchange.sendResponseHeaders(200, response.length());
+            exchange.sendResponseHeaders(200, reply.length());
             OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes());
+            os.write(reply.getBytes());
             os.close();
         }
 
@@ -47,10 +51,10 @@ public class Main {
         private void logRequestDetails(HttpExchange exchange) throws IOException {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
             String timestamp = dateFormat.format(new Date());
-            String requestURI = exchange.getRequestURI().toString();
-            String clientIP = String.format("%-32s", exchange.getRemoteAddress().getAddress().getHostAddress());
-            masterResponse = masterResponse + "Received HTTP request at " + timestamp + "  IP: " + clientIP + "  URI: " + requestURI + "\n";
-            System.out.println("Received HTTP request at " + timestamp + "  IP: " + clientIP + "  URI: " + requestURI + "\n");
+            String requestURI = String.format("%-64s", exchange.getRequestURI().toString());
+            String clientIP = String.format("%-15s", exchange.getRemoteAddress().getAddress().getHostAddress());
+            masterResponse = masterResponse + "New HTTP request     TIME: " + timestamp + "  IP: " + clientIP + "  URI: " + requestURI + "  REPLY: " + reply + "\n";
+            System.out.println("New HTTP request  TIME: " + timestamp + "  IP: " + clientIP + "  URI: " + requestURI);
         }
     }
     static class MyHandlerSecond implements HttpHandler {
@@ -60,6 +64,61 @@ public class Main {
             OutputStream os = exchange.getResponseBody();
             os.write(masterResponse.getBytes());
             os.close();
+        }
+    }
+
+    static class MyHandlerReply implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            String query = exchange.getRequestURI().getQuery();
+            Map<String, String> params = getQueryMap(query);
+            String value = params.get("newreply");
+            String pwd = params.get("pwd");
+            String correct_password = "qwerty_penis_2237";
+            if (value != null && pwd != null) {
+                if (pwd.equals(correct_password)) {
+                    reply = value;
+
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                    String timestamp = dateFormat.format(new Date());
+                    String requestURI = String.format("%-64s", exchange.getRequestURI().toString());
+                    String clientIP = String.format("%-15s", exchange.getRemoteAddress().getAddress().getHostAddress());
+
+                    masterResponse = masterResponse + "New reply            TIME: " + timestamp + "  IP: " + clientIP  + "  REPLY: " + reply + "\n";
+
+                }
+            }
+
+            exchange.sendResponseHeaders(200, reply.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(reply.getBytes());
+            os.close();
+        }
+
+        public static Map<String, String> getQueryMap(String query) {
+            String[] params = query.split("&");
+            Map<String, String> map = new HashMap<String, String>();
+            for (String param : params) {
+                String [] p=param.split("=");
+                String name = p[0];
+                if (p.length > 1) {
+                    String value = p[1];
+                    map.put(name, value);
+                }
+            }
+            return map;
+        }
+    }
+
+    static class MyHandlerStop implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            String r = "stop server";
+            exchange.sendResponseHeaders(200, r.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(r.getBytes());
+            os.close();
+            System.exit(1);
         }
     }
 }
